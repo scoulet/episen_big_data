@@ -1,5 +1,7 @@
 # episen_big_data
 
+Install java via https://code.visualstudio.com/docs/languages/java
+
 ```
 pip install pyspark
 ```
