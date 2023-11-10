@@ -4,7 +4,7 @@
 pip install pyspark
 ```
 
-Download pyspark_init.py
+Download `pyspark_init.py`
 
 ```
 python pyspark_init.py
