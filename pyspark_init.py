@@ -19,12 +19,11 @@ df = spark.createDataFrame(data).toDF(*columns)
 
 df2 = df.withColumnRenamed("Prénom", "Prenom")
 df3 = df2.withColumn("Date", lit("NULL"))
-print("df3 :")
+print("df3 with column rename example : ")
 df3.show()
 
-
 df4 = df3.withColumn("Date", when(col("Date")=="NULL", "01-01-1970"))
-print("df4 :")
+print("Example of case when ... then ... :")
 df4.show()
 
 print("exemple of select : ")
