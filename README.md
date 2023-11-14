@@ -7,7 +7,7 @@ Install java via https://code.visualstudio.com/docs/languages/java
 
 ```
 pip install virtualenv
-virtual_env pyspark_env
+virtualenv pyspark_env
 source pyspark_env/bin/activate
 pip install pyspark
 ```
