@@ -11,6 +11,7 @@ virtual_env pyspark_env
 source pyspark_env/bin/activate
 pip install pyspark
 ```
+
 Download `pyspark_init.py`
 
 ```
