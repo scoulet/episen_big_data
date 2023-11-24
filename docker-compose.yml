@@ -1,14 +1,5 @@
 version: '3.8'
 services:
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: votre_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-  
   minio:
     image: minio/minio:latest
     environment:
@@ -29,6 +20,21 @@ services:
       - ./notebooks:/home/jovyan/work
     environment:
       - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=""
+      - JUPYTER_PASSWORD=""
 
+  spark:
+    image: bitnami/spark:latest
+    ports:
+      - "4040:4040"
+    environment:
+      - SPARK_MODE=master
+
+  hadoop:
+    image: sequenceiq/hadoop-docker:latest
+    ports:
+      - "50070:50070"
+    environment:
+      - HDFS_USER=root
 volumes:
   minio_data:
