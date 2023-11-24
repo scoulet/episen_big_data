@@ -1,7 +1,27 @@
 version: '3.8'
-
 services:
-  pyspark-notebook:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: votre_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+  
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server --console-address ":9001" /data
+
+  jupyter:
     image: jupyter/pyspark-notebook:latest
     ports:
       - "8888:8888"
@@ -9,32 +29,6 @@ services:
       - ./notebooks:/home/jovyan/work
     environment:
       - JUPYTER_ENABLE_LAB=yes
-    networks:
-      - spark_network
-
-  spark:
-    image: bitnami/spark:latest
-    ports:
-      - "4040:4040"
-    environment:
-      - SPARK_MODE=master
-    networks:
-      - spark_network
-
-  hadoop:
-    image: sequenceiq/hadoop-docker:latest
-    ports:
-      - "50070:50070"
-    volumes:
-      - hadoop_data:/data
-    environment:
-      - HDFS_USER=root
-    networks:
-      - spark_network
 
 volumes:
-  hadoop_data:
-
-networks:
-  spark_network:
-    name: spark_network
+  minio_data:
