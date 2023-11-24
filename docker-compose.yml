@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   pyspark-notebook:
     image: jupyter/pyspark-notebook:latest
@@ -8,6 +9,8 @@ services:
       - ./notebooks:/home/jovyan/work
     environment:
       - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - spark_network
 
   spark:
     image: bitnami/spark:latest
@@ -15,10 +18,23 @@ services:
       - "4040:4040"
     environment:
       - SPARK_MODE=master
+    networks:
+      - spark_network
 
   hadoop:
     image: sequenceiq/hadoop-docker:latest
     ports:
       - "50070:50070"
+    volumes:
+      - hadoop_data:/data
     environment:
       - HDFS_USER=root
+    networks:
+      - spark_network
+
+volumes:
+  hadoop_data:
+
+networks:
+  spark_network:
+    name: spark_network
