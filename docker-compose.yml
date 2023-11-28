@@ -1,40 +1,97 @@
-version: '3.8'
+---
+# ----------------------------------------------------------------------------------------
+# A docker compose stack with Spark, Jupyterlab, Scala, postgres
+# taken from https://github.com/raphaelmansuy/spark-jupyter-env-docker/blob/main/README.md
+# with his approval
+# ----------------------------------------------------------------------------------------
+version: "3.8"
+volumes:
+  shared-workspace:
+    name: "hadoop-distributed-file-system"
+    driver: local
+  db:
+    name: "db"
+    driver: local
+  minio_data:
+    name: "minio_data"
+    driver: local
 services:
-  minio:
-    image: minio/minio:latest
+# Jupyer lab
+  jupyterlab:
+    image: jupyterlab:3.4.3-spark-3.0.0
+    restart: always
+    container_name: jupyterlab
+    ports:
+      - 8888:8888
+      - 4040:4040
+    volumes:
+      - ./workspace:/opt/workspace
+# Spark      
+  spark-master:
+    image: spark-master:3.0.0
+    restart: always
+    container_name: spark-master
+    ports:
+      - 8080:8080
+      - 7077:7077
+    volumes:
+      - ./workspace:/opt/workspace
+  spark-worker-1:
+    image: spark-worker:3.0.0
+    restart: always
+    container_name: spark-worker-1
     environment:
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=512M
+    ports:
+      - 8081:8081
+    volumes:
+      - ./workspace:/opt/workspace
+    depends_on:
+      - spark-master
+  spark-worker-2:
+    image: spark-worker:3.0.0
+    restart: always
+    container_name: spark-worker-2
+    environment:
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=512M
+    ports:
+      - 8082:8081
+    volumes:
+      - ./workspace:/opt/workspace
+    depends_on:
+      - spark-master
+# Minio an S3 compatible object store      
+  minio:
+    image: minio/minio:RELEASE.2022-11-26T22-43-32Z
+    container_name: minio-srv
     ports:
       - "9000:9000"
       - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server --console-address ":9001" /data
     volumes:
       - minio_data:/data
-    command: server --console-address ":9001" /data
-
-  jupyter:
-    image: jupyter/pyspark-notebook:latest
-    ports:
-      - "8888:8888"
-    volumes:
-      - ./notebooks:/home/jovyan/work
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_TOKEN=""
-      - JUPYTER_PASSWORD=""
-
-  spark:
-    image: bitnami/spark:latest
-    ports:
-      - "4040:4040"
-    environment:
-      - SPARK_MODE=master
-
-  hadoop:
-    image: sequenceiq/hadoop-docker:latest
-    ports:
-      - "50070:50070"
-    environment:
-      - HDFS_USER=root
-volumes:
-  minio_data:
+# Create buckets for minio
+  createbuckets:
+    image: minio/mc:RELEASE.2022-05-09T04-08-26Z
+    depends_on:
+      - minio
+    links:
+      - minio
+    restart: on-failure:5
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc mb myminio/bronze;
+      mc mb myminio/silver;
+      mc mb myminio/gold;
+      mc mb myminio/tech;
+      mc policy set public myminio/bronze;
+      mc policy set public myminio/silver;
+      mc policy set public myminio/gold;
+      mc policy set public myminio/tech;"
