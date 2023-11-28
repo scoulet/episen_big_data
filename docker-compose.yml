@@ -1,8 +1,6 @@
 ---
 # ----------------------------------------------------------------------------------------
 # A docker compose stack with Spark, Jupyterlab, Scala, postgres
-# taken from https://github.com/raphaelmansuy/spark-jupyter-env-docker/blob/main/README.md
-# with his approval
 # ----------------------------------------------------------------------------------------
 version: "3.8"
 volumes:
@@ -18,12 +16,16 @@ volumes:
 services:
 # Jupyer lab
   jupyterlab:
-    image: jupyterlab:3.4.3-spark-3.0.0
+    image: jupyterlab-custom:latest
     restart: always
     container_name: jupyterlab
     ports:
       - 8888:8888
       - 4040:4040
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_DEFAULT_REGION=us-east-1
     volumes:
       - ./workspace:/opt/workspace
 # Spark      
